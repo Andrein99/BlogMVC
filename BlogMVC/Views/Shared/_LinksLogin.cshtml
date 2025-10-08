@@ -1,0 +1,32 @@
+﻿@using BlogMVC.Entidades
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Usuario> SignInManager
+
+<ul class="navbar-nav">
+	@if (SignInManager.IsSignedIn(User))
+	{
+		<li class="nav-item">
+			<span class="nav-link text-dark">Hola, @User.Identity!.Name</span>
+		</li>
+		<li>
+			<form class="form-inline" asp-action="logout" asp-controller="usuarios">
+				<button type="submit" class="btn btn-link nav-link text-dark">
+					Logout
+				</button>
+			</form>
+		</li>
+	}
+	else
+	{
+		<li class="nav-item">
+			<a asp-action="Registro" class="nav-link dark-text" asp-controller="usuarios">
+				Registro
+			</a>
+		</li>
+		<li class="nav-item">
+			<a asp-action="Login" class="nav-link dark-text" asp-controller="usuarios">
+				Login
+			</a>
+		</li>
+	}
+</ul>
