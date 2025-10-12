@@ -63,11 +63,15 @@ namespace BlogMVC.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Login(string? mensaje = null)
+        public IActionResult Login(string? mensaje = null, string? urlRetorno = null)
         {
             if (mensaje is not null)
             {
                 ViewData["mensaje"] = mensaje;
+            }
+            if (urlRetorno is not null)
+            {
+                ViewData["urlRetorno"] = urlRetorno;
             }
 
             return View();
@@ -85,7 +89,14 @@ namespace BlogMVC.Controllers
                 modelo.Password, modelo.Recuerdame, lockoutOnFailure: false);
             if (resultado.Succeeded)
             {
-                return RedirectToAction("Index", "Home");
+                if (string.IsNullOrEmpty(modelo.UrlRetorno))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    return LocalRedirect(modelo.UrlRetorno);
+                }
             }
             else
             {

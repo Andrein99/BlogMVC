@@ -34,7 +34,7 @@ namespace BlogMVC.Servicios
             }
 
             var request = httpContextAccessor.HttpContext!.Request; // Obtener la URL del servidor
-            var url = $"${request.Scheme}://{request.Host}";
+            var url = $"{request.Scheme}://{request.Host}";
             var urlArchivo = Path.Combine(url, contenedor, nombreArchivo).Replace("\\", "/"); // Reemplazar las barras invertidas por diagonales para que funcione en URL
             return urlArchivo;
         }
