@@ -56,7 +56,14 @@ namespace BlogMVC.Controllers
                 PortadaUrl = entrada.PortadaUrl,
                 EscritoPor = entrada.UsuarioCreacion!.Nombre,
                 MostrarBotonEdicion = puedeEditarEntradas,
-                EntradaBorrada = entrada.Borrado
+                EntradaBorrada = entrada.Borrado,
+                Comentarios = entrada.Comentarios.Select(c => new ComentarioViewModel
+                {
+                    Id = c.Id,
+                    Cuerpo = c.Cuerpo,
+                    EscritoPor = c.Usuario!.Nombre,
+                    FechaPublicacion = c.FechaPublicacion
+                })
             }; // Crea el modelo para la vista con los datos de la entrada
 
             return View(modelo); // Retorna la vista con el modelo de la entrada

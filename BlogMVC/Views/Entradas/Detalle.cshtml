@@ -1,4 +1,5 @@
 ﻿@using BlogMVC.Servicios
+@using BlogMVC.Utilidades
 @model EntradaDetalleViewModel
 
 @*
@@ -7,6 +8,7 @@
 @{
     ViewData["Title"] = Model.Titulo;
     var fechaPublicacionConFormato = Model.FechaPublicacion.ToString("dd MMM, yyyy");
+    var urlRetorno = Context.ObtenerUrlRetorno();
 }
 
 <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -19,9 +21,9 @@
                 <input type="hidden" name="Id" id="id" value="@Model.Id" />
                 @if (Model.EntradaBorrada) {
                     <button 
-                        class="btn btn-secondary" 
-                        asp-action="Borrar" 
-                        asp-route-borrado="false"
+                    class="btn btn-secondary" 
+                    asp-action="Borrar" 
+                    asp-route-borrado="false"
                     >
                         Restaurar
                     </button>
@@ -29,8 +31,8 @@
                 else
                 {
                     <button class="btn btn-danger"
-                            asp-action="Borrar"
-                            asp-route-borrado="true">
+                    asp-action="Borrar"
+                    asp-route-borrado="true">
                         Borrar
                     </button>
                 }
@@ -50,6 +52,51 @@
 <div id="contenido" class="ps-3">
 
 </div>
+
+<hr />
+
+@if (Model.Comentarios.Any())
+{
+    <h2>Comentarios</h2>
+
+    <div class="mb-4">
+        @foreach(var comentario in Model.Comentarios)
+        {
+            <div class="mb-2 p-2" style="border-left: 1px solid gray">
+                <h6>@comentario.EscritoPor</h6>
+                <h6>@comentario.FechaPublicacion.ToString("dd MMM, yyyy 'a las' hh:mm tt")</h6>
+                <div>
+					@comentario.Cuerpo
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<h2>Deja un comentario</h2>
+@if (User.Identity!.IsAuthenticated)
+{
+    <form asp-action="comentar" asp-controller="comentarios">
+        <input type="hidden" asp-for="Id" />
+        <div style="max-width: 600px">
+            <textarea id="cuerpo" name="cuerpo" required class="form-control"
+            style="height: 100px" placeholder="Escribe un comentario..."
+            ></textarea>
+
+            <div class="d-flex justify-content-end mt-2">
+                <button type="submit" class="btn btn-primary">Comentar</button>
+            </div>
+        </div>
+    </form>
+}
+else
+{
+    <p>
+        Inicia sesión para comentar <a asp-controller="usuarios"
+        asp-action="login" asp-route-urlRetorno="@urlRetorno">
+            aquí</a>
+    </p>
+}
 
 <input type="hidden" id="cuerpoDelta" name="cuerpoDelta" value="@Model.Cuerpo" />
 
