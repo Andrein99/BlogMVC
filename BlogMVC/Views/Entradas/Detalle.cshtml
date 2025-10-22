@@ -53,6 +53,7 @@
 
 </div>
 
+
 <hr />
 
 @if (Model.Comentarios.Any())
@@ -66,8 +67,17 @@
                 <h6>@comentario.EscritoPor</h6>
                 <h6>@comentario.FechaPublicacion.ToString("dd MMM, yyyy 'a las' hh:mm tt")</h6>
                 <div>
-					@comentario.Cuerpo
+                    @comentario.Cuerpo
                 </div>
+                @if (comentario.MostrarBotonBorrar)
+                {
+                    <div class="mt-2">
+                        <a class="btn btn-danger" 
+                        asp-action="borrar" 
+                        asp-controller="comentarios"
+                        asp-route-id="@comentario.Id">Borrar comentario</a>
+                    </div>
+                }
             </div>
         }
     </div>
@@ -114,5 +124,17 @@ else
         document.querySelectorAll('pre').forEach(el => {
             hljs.highlightElement(el);
         });
+
+        function ajustarAncho() {
+            const imagen = document.querySelector("img.img-fluid");
+            const contenido = document.getElementById("contenido");
+
+            if (imagen && contenido) {
+                contenido.style.width = imagen.clientWidth + "px";
+            }
+        }
+
+        window.addEventListener("load", ajustarAncho);
+        window.addEventListener("resize", ajustarAncho);
     </script>
 }

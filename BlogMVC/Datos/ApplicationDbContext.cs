@@ -14,6 +14,14 @@ namespace BlogMVC.Datos
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            // Configuraciones adicionales del modelo pueden ir aquí
+            builder.Entity<Comentario>().HasQueryFilter(c => !c.Borrado); // Filtro global para excluir comentarios borrados
+            builder.Entity<Entrada>().HasQueryFilter(e => !e.Borrado);
+        }
+
         public DbSet<Entrada> Entradas { get; set; }
         public DbSet<Comentario> Comentarios { get; set; }
     }

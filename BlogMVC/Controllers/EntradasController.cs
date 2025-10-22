@@ -29,6 +29,7 @@ namespace BlogMVC.Controllers
         public async Task<IActionResult> Detalle(int id) // Acción para ver el detalle de una entrada
         {
             var entrada = await context.Entradas // Consulta la base de datos para obtener la entrada con el Id proporcionado
+                .IgnoreQueryFilters() // Ignorar los filtros globales (por ejemplo, para incluir entradas borradas)
                 .Include(x => x.UsuarioCreacion) // Incluir el usuario que creó la entrada
                 .Include(x => x.Comentarios) // Incluir los comentarios asociados a la entrada
                     .ThenInclude(x => x.Usuario) // Incluir el usuario que creó cada comentario
@@ -47,6 +48,10 @@ namespace BlogMVC.Controllers
                 return RedirectToAction("Login", "Usuarios", new { urlRetorno }); // Redirige a la página de login
             }
 
+            var puedeBorrarComentarios = await servicioUsuarios.PuedeUsuarioBorrarComentarios(); // Verifica si el usuario autenticado puede borrar comentarios
+
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId(); // Obtiene el Id del usuario autenticado
+
             var modelo = new EntradaDetalleViewModel
             {
                 Id = entrada.Id,
@@ -62,7 +67,8 @@ namespace BlogMVC.Controllers
                     Id = c.Id,
                     Cuerpo = c.Cuerpo,
                     EscritoPor = c.Usuario!.Nombre,
-                    FechaPublicacion = c.FechaPublicacion
+                    FechaPublicacion = c.FechaPublicacion,
+                    MostrarBotonBorrar = puedeBorrarComentarios || usuarioId == c.UsuarioId
                 })
             }; // Crea el modelo para la vista con los datos de la entrada
 
@@ -114,7 +120,8 @@ namespace BlogMVC.Controllers
         public async Task<IActionResult> Editar(int id) // Acción para editar una entrada existente
         {
             var entrada = await context.Entradas // Consulta la base de datos para obtener la entrada con el Id proporcionado
-                .FirstOrDefaultAsync(x => x.Id == id); // Buscar la entrada por Id
+                .IgnoreQueryFilters() // Ignorar los filtros globales (por ejemplo, para incluir entradas borradas)
+                .FirstOrDefaultAsync(e => e.Id == id); // Buscar la entrada por Id
             if (entrada is null)
             {
                 return RedirectToAction("NoEncontrado", "Home"); // Si no se encuentra la entrada, redirige a una página de "No Encontrado"
@@ -138,6 +145,7 @@ namespace BlogMVC.Controllers
                 return View(modelo); // Si el modelo no es válido, retorna la vista con el modelo para mostrar errores
             }
             var entradaDB = await context.Entradas // Consulta la base de datos para obtener la entrada con el Id proporcionado
+                .IgnoreQueryFilters() // Ignorar los filtros globales (por ejemplo, para incluir entradas borradas)
                 .FirstOrDefaultAsync(x => x.Id == modelo.Id); // Buscar la entrada por Id
             if (entradaDB is null)
             {
@@ -170,7 +178,9 @@ namespace BlogMVC.Controllers
         [Authorize(Roles = $"{Constantes.RolAdmin}, {Constantes.CRUDEntradas}")]
         public async Task<IActionResult> Borrar(int id, bool borrado)
         {
-            var entradaDB = await context.Entradas.FirstOrDefaultAsync(x => x.Id == id);
+            var entradaDB = await context.Entradas
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (entradaDB is null)
             {
                 return RedirectToAction("NoEncontrado", "Home");
