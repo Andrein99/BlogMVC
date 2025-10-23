@@ -31,6 +31,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddTransient<IAlmacenadorArchivos, AlmacenadorArchivosLocal>(); // Inyección de dependencia para el servicio de almacenamiento de archivos
 builder.Services.AddTransient<IServicioUsuarios, ServicioUsuarios>(); // Inyección de dependencia para el servicio de usuarios
 builder.Services.AddTransient<IServicioChat, ServicioChatOpenAI>(); // Inyección de dependencia para el servicio de chat IA
+builder.Services.AddTransient<IServicioImagenes, ServicioImagenesOpenAI>(); // Inyección de dependencia para el servicio de generación de imágenes IA
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(opciones =>
     opciones.UseSqlServer("name=DefaultConnection")

@@ -15,17 +15,23 @@ namespace BlogMVC.Controllers
         private readonly IAlmacenadorArchivos almacenadorArchivos;
         private readonly IServicioUsuarios servicioUsuarios;
         private readonly IServicioChat servicioChat;
+        private readonly IServicioImagenes servicioImagenes;
+        private readonly IWebHostEnvironment env;
         private readonly string contenedor = "entradas"; // Nombre del contenedor donde se almacenan las imágenes de las entradas
 
         public EntradasController(ApplicationDbContext context,
             IAlmacenadorArchivos almacenadorArchivos,
             IServicioUsuarios servicioUsuarios,
-            IServicioChat servicioChat)
+            IServicioChat servicioChat,
+            IServicioImagenes servicioImagenes,
+            IWebHostEnvironment env)
         {
             this.context = context;
             this.almacenadorArchivos = almacenadorArchivos;
             this.servicioUsuarios = servicioUsuarios;
             this.servicioChat = servicioChat;
+            this.servicioImagenes = servicioImagenes;
+            this.env = env;
         }
 
         [HttpGet]
@@ -99,9 +105,13 @@ namespace BlogMVC.Controllers
             {
                 portadaUrl = await almacenadorArchivos.Almacenar(contenedor, modelo.ImagenPortada); // Almacena la imagen de portada y obtiene la URL
 
+            } else if (modelo.ImagenPortadaIA is not null)
+            {
+                var archivo = Base64AIFormFile(modelo.ImagenPortadaIA);
+                portadaUrl = await almacenadorArchivos.Almacenar(contenedor, archivo);
             }
 
-            string usuarioId = servicioUsuarios.ObtenerUsuarioId()!; // Obtiene el Id del usuario autenticado
+                string usuarioId = servicioUsuarios.ObtenerUsuarioId()!; // Obtiene el Id del usuario autenticado
 
             var entrada = new Entrada
             {
@@ -157,9 +167,14 @@ namespace BlogMVC.Controllers
             string? portadaUrl = null; // Inicializa la URL de la portada como null
             if (modelo.ImagenPortada is not null) // Si se proporcionó una nueva imagen de portada
             {
-                portadaUrl = await almacenadorArchivos.Editar(modelo.ImagenPortadaActual, 
+                portadaUrl = await almacenadorArchivos.Editar(modelo.ImagenPortadaActual,
                     contenedor, modelo.ImagenPortada); // Almacena la nueva imagen de portada y obtiene la URL
-            } else if (modelo.ImagenRemovida) // Si se indicó que se quiere remover la imagen de portada
+            } else if (modelo.ImagenPortadaIA is not null)
+            {
+                var archivo = Base64AIFormFile(modelo.ImagenPortadaIA);
+                portadaUrl = await almacenadorArchivos.Editar(modelo.ImagenPortadaActual, contenedor, archivo);
+            }
+            else if (modelo.ImagenRemovida) // Si se indicó que se quiere remover la imagen de portada
             {
                 await almacenadorArchivos.Borrar(modelo.ImagenPortadaActual, contenedor); // Borra la imagen de portada actual
             }
@@ -208,6 +223,35 @@ namespace BlogMVC.Controllers
                 await Response.WriteAsync(segmento);
                 await Response.Body.FlushAsync();
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GenerarImagen([FromQuery] string titulo)
+        {
+            if (string.IsNullOrWhiteSpace(titulo))
+            {
+                return BadRequest("El título es obligatorio.");
+            }
+
+            // Se utiliza este código para usar una imagen como placeholder durante el desarrollo para no llamar a la API y gastar dinero.
+            //if (env.IsDevelopment())
+            //{
+            //    var rutaImagen = Path.Combine(env.WebRootPath, "img", "IA-NoImage.png");
+            //    var imagenBytes = await System.IO.File.ReadAllBytesAsync(rutaImagen);
+            //    return File(imagenBytes, "image/png");
+            //}
+
+            var bytes = await servicioImagenes.GenerarPortadaEntrada(titulo);
+
+            return File(bytes, "image/png");
+        }
+
+        private IFormFile Base64AIFormFile(string base64)
+        {
+            byte[] bytes = Convert.FromBase64String(base64);
+            var stream = new MemoryStream(bytes);
+            IFormFile archivo = new FormFile(stream, 0, bytes.Length, "imagen", "imagen.png");
+            return archivo;
         }
     }
 }
