@@ -1,3 +1,4 @@
+using BlogMVC.Configuraciones;
 using BlogMVC.Datos;
 using BlogMVC.Entidades;
 using BlogMVC.Servicios;
@@ -5,8 +6,21 @@ using BlogMVC.Utilidades;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// IA
+builder.Services.AddOptions<ConfiguracionesIA>() // Configuración de opciones para IA
+    .Bind(builder.Configuration.GetSection(ConfiguracionesIA.Seccion)) // Vinculación de la sección de configuración
+    .ValidateDataAnnotations() // Validación de datos anotados
+    .ValidateOnStart(); // Validación al iniciar la aplicación
+builder.Services.AddScoped(sp =>
+{
+    var configuracionesIA = sp.GetRequiredService<IOptions<ConfiguracionesIA>>();
+    return new OpenAIClient(configuracionesIA.Value.LlaveOpenAI);
+});
 
 // Blazor
 builder.Services.AddServerSideBlazor();
@@ -16,6 +30,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddTransient<IAlmacenadorArchivos, AlmacenadorArchivosLocal>(); // Inyección de dependencia para el servicio de almacenamiento de archivos
 builder.Services.AddTransient<IServicioUsuarios, ServicioUsuarios>(); // Inyección de dependencia para el servicio de usuarios
+builder.Services.AddTransient<IServicioChat, ServicioChatOpenAI>(); // Inyección de dependencia para el servicio de chat IA
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(opciones =>
     opciones.UseSqlServer("name=DefaultConnection")

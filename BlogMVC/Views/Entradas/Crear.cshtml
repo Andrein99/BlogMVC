@@ -22,6 +22,7 @@
 		<label asp-for="Cuerpo" class="form-label"></label>
 		<input style="display: none" asp-for="Cuerpo" class="form-control" />
 		<div id="editor"></div>
+		<button type="button" onclick="generarCuerpo()" class="btn btn-secondary mt-2">Generar con IA</button>
 		<span id="cuerpo-error" class="text-danger"></span>
 	</div>
 	<div class="mb-3">
@@ -39,7 +40,70 @@
 	<a class="btn btn-secondary" asp-action="Index" asp-controller="Home">Cancelar</a>
 </form>
 
+<div class="modal fade" id="modal-cuerpo-ia"
+     tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	 <div class="modal-dialog modal-xl">
+		 <div class="modal-content">
+			 <div class="modal-header">
+				 <h1 class="modal-title fs-5">Artículo generado por la IA</h1>
+				 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			 </div>
+			 <div class="modal-body">
+				 <div id="output">
+				 </div>
+			 </div>
+			 <div class="modal-footer">
+				 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" onclick="aceptarCambiosCuerpoIA()">
+					Aceptar cambios
+				</button>
+			 </div>
+		 </div>
+	 </div>
+</div>
+
 @section Scripts {
 	<partial name="_ValidationScriptsPartial" />
 	<script src="~/js/formulario-entradas.js"></script>
+	<script>
+		const modalCuerpoIA = new bootstrap.Modal(document.getElementById('modal-cuerpo-ia'));
+		let articuloSugeridoPorIA = ''; // Variable para almacenar el artículo generado por la IA
+
+		async function generarCuerpo() {
+			const titulo = document.getElementById("Titulo").value;
+			const respuesta = 
+				await fetch('/entradas/GenerarCuerpo?titulo=' + encodeURIComponent(titulo), {
+					method: 'GET'
+
+				});
+
+			if (!respuesta.ok) {
+				const contenido = await respuesta.text(); // Obtener el contenido de la respuesta
+				alert(contenido);
+				return;
+			}
+
+			const output = document.getElementById('output'); // Área donde se mostrará el artículo generado
+			output.innerHTML = 'Generando artículo...'; // Mensaje de carga
+			const reader = respuesta.body.getReader(); // Obtener el lector del cuerpo de la respuesta
+			const decoder = new TextDecoder(); // Decodificador de texto
+			let articulo = ''; // Variable para almacenar el artículo generado
+			modalCuerpoIA.show(); // Mostrar el modal
+
+			while (true) {
+				const { done, value } = await reader.read(); // Leer el siguiente fragmento
+				if (done) break; // Salir si se ha terminado de leer
+				articulo += decoder.decode(value, { stream: true }); // Decodificar el fragmento y agregarlo al artículo
+				output.innerHTML = articulo; // Actualizar el área de salida con el artículo generado hasta ahora
+			}
+
+			articuloSugeridoPorIA = articulo; // Almacenar el artículo generado en la variable global
+		}
+
+		function aceptarCambiosCuerpoIA() {
+			const delta = quill.clipboard.convert({ html: articuloSugeridoPorIA }); // Convertir HTML a Delta
+			quill.setContents(delta, 'silent'); // 'silent' para evitar el evento text-change
+			modalCuerpoIA.hide(); // Ocultar el modal
+		}
+	</script>
 }
