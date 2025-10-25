@@ -1,6 +1,7 @@
 using BlogMVC.Configuraciones;
 using BlogMVC.Datos;
 using BlogMVC.Entidades;
+using BlogMVC.Jobs;
 using BlogMVC.Servicios;
 using BlogMVC.Utilidades;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -32,6 +33,12 @@ builder.Services.AddTransient<IAlmacenadorArchivos, AlmacenadorArchivosLocal>();
 builder.Services.AddTransient<IServicioUsuarios, ServicioUsuarios>(); // Inyección de dependencia para el servicio de usuarios
 builder.Services.AddTransient<IServicioChat, ServicioChatOpenAI>(); // Inyección de dependencia para el servicio de chat IA
 builder.Services.AddTransient<IServicioImagenes, ServicioImagenesOpenAI>(); // Inyección de dependencia para el servicio de generación de imágenes IA
+builder.Services.AddScoped<IAnalisisSentimientos, AnalisisSentimientosOpenAI>(); // Inyección de dependencia para el servicio de análisis de sentimientos IA. Se usa Scoped porque se usa ApplicationDbContext en el servicio.
+
+builder.Services.AddHttpClient(); // Cliente HTTP para llamadas externas
+
+// Tarea de fondo que se aplicará de forma recurrente para el análisis de sentimientos.
+builder.Services.AddHostedService<AnalisisSentimientosRecurrente>();
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(opciones =>
     opciones.UseSqlServer("name=DefaultConnection")

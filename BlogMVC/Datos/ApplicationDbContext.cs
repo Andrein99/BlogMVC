@@ -24,5 +24,6 @@ namespace BlogMVC.Datos
 
         public DbSet<Entrada> Entradas { get; set; }
         public DbSet<Comentario> Comentarios { get; set; }
+        public DbSet<Lote> Lotes { get; set; }
     }
 }

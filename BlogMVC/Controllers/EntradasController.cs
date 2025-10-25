@@ -246,6 +246,25 @@ namespace BlogMVC.Controllers
             return File(bytes, "image/png");
         }
 
+        [HttpGet]
+        public async Task<ActionResult> ConComentariosNegativos()
+        {
+            var entradasConComentariosNegativos = await context.Entradas
+                .Where(x => x.Comentarios.Where(x => x.Puntuacion == 2 || x.Puntuacion == 1).Any())
+                .OrderByDescending(x => x.Comentarios.Where(x => x.Puntuacion == 2 || x.Puntuacion == 1).Count())
+                .Select(x => new EntradaConComentariosNegativosViewModel
+                {
+                    Id = x.Id,
+                    Titulo = x.Titulo,
+                    CantidadComentariosNegativos = 
+                    x.Comentarios.Where(c => c.Puntuacion == 2 || c.Puntuacion == 1).Count()
+                }).ToListAsync();
+
+            var modelo = new EntradasConComentariosNegativosViewModel();
+            modelo.Entradas = entradasConComentariosNegativos;
+            return View(modelo);
+        }
+
         private IFormFile Base64AIFormFile(string base64)
         {
             byte[] bytes = Convert.FromBase64String(base64);

@@ -13,6 +13,7 @@ namespace BlogMVC.Entidades
         public string? UsuarioId { get; set; } // Id del usuario que hizo el comentario
         public Usuario? Usuario { get; set; } // Usuario que hizo el comentario
         public bool Borrado { get; set; } // Indica si el comentario ha sido borrado (Para saber cuál mostrar. Se mantiene el comentario para temas de auditoría.)
+        public int? Puntuacion { get; set; } // Puntuación de los sentimientos generados por el comentario.
 
     }
 }
